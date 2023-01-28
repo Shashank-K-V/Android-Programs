@@ -1,0 +1,130 @@
+package com.example.myapplication;
+import android.os.Bundle;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    EditText txtid,txtname,txtage,txtadd;
+    Button btnsearch,btnsubmit;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        txtid = findViewById(R.id.txt_id);
+        txtname = findViewById(R.id.txt_name);
+        txtage = findViewById(R.id.txt_age);
+        txtadd = findViewById(R.id.txt_add);
+        btnsearch = findViewById(R.id.btn_search);
+        btnsearch.setOnClickListener(this);
+        btnsubmit = findViewById(R.id.btn_submit);
+        btnsubmit.setOnClickListener(this);
+
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.equals(btnsubmit)){
+            String sid = txtid.getText().toString();
+            String sname = txtname.getText().toString();
+            String sage = txtage.getText().toString();
+            String sadd = txtadd.getText().toString();
+            Mydatabase dat = new Mydatabase(this,Mydatabase.DATABASE_NAME,null,1);
+            SQLiteDatabase database = dat.getWritableDatabase();
+            ContentValues cv = new ContentValues();
+            cv.put("id",sid);
+            cv.put("name",sname);
+            cv.put("age",sage);
+            cv.put("address",sadd);
+            database.insert("Employee",null,cv);
+            Toast.makeText(this,"Data Successfully Added",Toast.LENGTH_LONG).show();
+            database.close();
+        }
+        else{
+            Intent it = new Intent(this, SearchActivit.class);
+            startActivity(it);
+        }
+    }
+}
+
+
+package com.example.myapplication;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+import androidx.annotation.Nullable;
+
+public class Mydatabase extends SQLiteOpenHelper{
+    public static String DATABASE_NAME = "employee.db";
+    public static String EMPLOYEE_TABLE = "employee";
+    public Mydatabase(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
+        super(context, name, factory, version);
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL ("CREATE TABLE EMPLOYEE(ID TEXT,NAME TEXT,AGE TEXT,ADDRESS TEXT)");
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+
+    }
+}
+
+package com.example.myapplication;
+import androidx.appcompat.app.AppCompatActivity;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+public class SearchActivit extends AppCompatActivity implements View.OnClickListener{
+    EditText txtempid;
+    Button btnsearch;
+    TextView txtdisplay;
+
+    public void onCreate(Bundle b){
+        super.onCreate(b);
+        setContentView(R.layout.activity_search2);
+        txtempid = findViewById(R.id.txt_empid);
+        btnsearch = findViewById(R.id.btn_sr);
+        btnsearch.setOnClickListener(this);
+        txtdisplay = findViewById(R.id.txt_enter);
+    }
+    @Override
+    public void onClick(View view) {
+        String eid = txtempid.getText().toString();
+        Mydatabase dat = new Mydatabase(this, Mydatabase.DATABASE_NAME,null,1);
+        SQLiteDatabase Database = dat.getReadableDatabase();
+        String[] col = new String[]{ "id", "name","age","address"};
+        String where = "id=?";
+        String[] val = new String[]{eid.trim()};
+        Cursor cu = Database.query(Mydatabase.EMPLOYEE_TABLE,col,where,val,null,null,null);
+        txtdisplay.setText("");
+        if(cu.moveToNext()){
+            String id = cu.getString(0);
+            String name = cu.getString(1);
+            String age = cu.getString(2);
+            String address = cu.getString(3);
+            txtdisplay.setText(id+" : "+name+" : "+age+" : "+ address+" ");
+        }
+        else{
+            Toast.makeText(this,"NO ID EXIST",Toast.LENGTH_SHORT).show();
+        }
+    }
+}
+
